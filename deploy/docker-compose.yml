@@ -13,7 +13,7 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=myemail@mydomain.com"
+      - "--certificatesresolvers.myresolver.acme.email=info@thieflord.dev"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -33,7 +33,7 @@ services:
     expose:
       - "3030"
     environment:
-      ADMIN_PASSWORD: "mypassword"
+      ADMIN_PASSWORD: "1234!@#$qwerQWER"
 
   middleware:
     build: ./middleware
@@ -50,7 +50,7 @@ services:
       - "3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pods.rule=Host(`mydomain.com`)"
+      - "traefik.http.routers.pods.rule=Host(`thieflord.dev`)"
       - "traefik.http.routers.pods.entrypoints=websecure"
       - "traefik.http.routers.pods.tls.certresolver=myresolver"
 
@@ -64,7 +64,7 @@ services:
       - "4000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`app.mydomain.com`)"
+      - "traefik.http.routers.frontend.rule=Host(`app.thieflord.dev`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
 
