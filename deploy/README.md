@@ -37,5 +37,5 @@ In `frontend/app/.env.local`:
 
 ```bash
 docker-compose build
-docker-compose up -d
+docker-compose up -d  
 ```
