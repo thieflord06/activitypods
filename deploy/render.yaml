@@ -1,0 +1,113 @@
+services:
+  # Traefik service
+  - type: web
+    name: traefik
+    runtime: docker
+    image: traefik:v2.3
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=myemail@mydomain.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ./data/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Fuseki service
+  - type: web
+    name: fuseki
+    runtime: docker
+    image: semapps/jena-fuseki-webacl
+    ports:
+      - "3030:3030"
+    volumes:
+      - ./data/fuseki:/fuseki
+    envVars:
+      - key: ADMIN_PASSWORD
+        value: "mypassword"
+
+  # Middleware service
+  - type: web
+    name: middleware
+    runtime: docker
+    buildCommand: ./middleware
+    dependsOn:
+      - fuseki
+      - redis
+    volumes:
+      - ./middleware/logs:/app/boilerplate/logs
+      - ./middleware/actors:/app/boilerplate/actors
+      - ./middleware/jwt:/app/boilerplate/jwt
+      - ./middleware/uploads:/app/boilerplate/uploads
+    ports:
+      - "3000:3000"
+    envVars:
+      - key: TRAEFIK_ENABLE
+        value: "true"
+      - key: TRAEFIK_HTTP_ROUTERS_PODS_RULE
+        value: "Host(`mydomain.com`)"
+      - key: TRAEFIK_HTTP_ROUTERS_PODS_ENTRYPOINTS
+        value: "websecure"
+      - key: TRAEFIK_HTTP_ROUTERS_PODS_TLS_CERTRESOLVER
+        value: myresolver
+
+  # Frontend service
+  - type: web
+    name: frontend
+    runtime: docker
+    buildCommand: ./frontend
+    dependsOn:
+      - middleware
+    restart: always
+    ports:
+      - "4000:4000"
+    envVars:
+      - key: TRAEFIK_ENABLE
+        value: "true"
+      - key: TRAEFIK_HTTP_ROUTERS_FRONTEND_RULE
+        value: "Host(`app.mydomain.com`)"
+      - key: TRAEFIK_HTTP_ROUTERS_FRONTEND_ENTRYPOINTS
+        value: "websecure"
+      - key: TRAEFIK_HTTP_ROUTERS_FRONTEND_TLS_CERTRESOLVER
+        value: myresolver
+
+  # Redis service
+  - type: pserv
+    name: redis
+    runtime: docker
+    image: redis
+    volumes:
+      - ./data/redis:/data
+    envVars:
+      - key: REDIS_HOST
+        value: 'redis'
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 10
+
+  # Arena service
+  - type: web
+    name: arena
+    runtime: docker
+    buildCommand: ./arena/Dockerfile
+    dependsOn:
+      - redis
+    ports:
+      - "4567:4567"
+    volumes:
+      - ./arena/config:/opt/arena/src/server/config
+    envVars:
+      - key: REDIS_HOST
+        value: 'redis'
