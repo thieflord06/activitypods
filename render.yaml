@@ -4,12 +4,12 @@ services:
     runtime: docker
 #    rootDir: activitypod
 #    Docker command to be added
-    healthCheckPath: /
+#    healthCheckPath: /
     image:
       url: semapps/jena-fuseki-webacl
     disk:
       name: data
-      mountPath: ./data/fuseki:/fuseki:z
+      mountPath: ./data/fuseki:/fuseki
     envVars:
       - key: ADMIN_PASSWORD
         value: "admin"
