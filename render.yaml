@@ -9,7 +9,7 @@ services:
       url: semapps/jena-fuseki-webacl
     disk:
       name: data
-      mountPath: ./data/fuseki:/fuseki
+      mountPath: ./data/fuseki/fuseki
     envVars:
       - key: ADMIN_PASSWORD
         value: "admin"
