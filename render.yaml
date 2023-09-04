@@ -5,7 +5,7 @@ services:
 #    rootDir: activitypod
 #    Docker command to be added
     healthCheckPath: /
-    img:
+    image:
       url: semapps/jena-fuseki-webacl
     disk:
       name: data
