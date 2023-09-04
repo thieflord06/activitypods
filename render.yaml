@@ -1,0 +1,25 @@
+services:
+  - type: pserv
+    name: fuseki
+    runtime: docker
+#    rootDir: activitypod
+#    Docker command to be added
+    healthCheckPath: /
+    img:
+      url: semapps/jena-fuseki-webacl
+    disk:
+      name: data
+      mountPath: ./data/fuseki:/fuseki:z
+    envVars:
+      - key: ADMIN_PASSWORD
+        value: "admin"
+      - key: PORT
+        value: "3030"
+
+  - type: web
+    name: middleware
+    runtime: docker
+    rootDir: ./deploy/middleware
+    healthCheckPath: /
+    dockerfilePath: ./deploy/middleware/Dockerfile
+    autoDeploy: true
