@@ -1,9 +1,11 @@
-version: '3.5'
 services:
-  traefik:
-    image: traefik:v2.3
-    container_name: traefik
-    command:
+  - type: web
+    name: traefik
+    runtime: docker
+    region: ohio
+    plan: starter
+    rootDir: whatshouldthisbe?
+    dockerCommand:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -15,6 +17,34 @@ services:
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=info@thieflord.dev"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  - type: redis
+    name: redis
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+    plan: free
+    command: ["redis-server", "--appendonly", "yes"]
+  - type: web
+    name: arena
+    runtime: docker
+    repo: https://github.com/bee-queue/arena.git --branch v2.8.1 /opt/arena
+    region: ohio
+    plan: starter
+    rootDir: ???
+    healthCheckPath: /
+    envVars:
+      - key: REDIS_HOST
+        value: redis
+  -  type: web
+     name: fuseki
+     runtime: docker
+     envVars:
+       - key: ADMIN_PASSWORD
+         value: "1234!@#$qwerQWER"
+
+
+  traefik:
+    image: traefik:v2.3
     ports:
       - "80:80"
       - "443:443"
@@ -25,15 +55,12 @@ services:
 
   fuseki:
     image: semapps/jena-fuseki-webacl
-    container_name: fuseki
     volumes:
       - ./data/fuseki:/fuseki
     ports:
       - "3030:3030"
     expose:
       - "3030"
-    environment:
-      ADMIN_PASSWORD: "test1234"
 
   middleware:
     build: ./middleware
@@ -50,7 +77,7 @@ services:
       - "3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pods.rule=Host(`test.activity.thieflord.dev`)"
+      - "traefik.http.routers.pods.rule=Host(`activity.thieflord.dev`)"
       - "traefik.http.routers.pods.entrypoints=websecure"
       - "traefik.http.routers.pods.tls.certresolver=myresolver"
 
@@ -64,15 +91,23 @@ services:
       - "4000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`test.activity.thieflord.dev`)"
+      - "traefik.http.routers.frontend.rule=Host(`app.activity.thieflord.dev`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
 
   redis:
-    image: redis
-    container_name: redis
     expose:
       - "6379"
     volumes:
       - ./data/redis:/data
-    command: ["redis-server", "--appendonly", "yes"]
+
+
+  arena:
+    build: ./arena/Dockerfile
+    restart: always
+    volumes:
+      - ./arena/config:/opt/arena/src/server/config
+    depends_on:
+      - redis
+    ports:
+      - "4567:4567"
