@@ -76,16 +76,3 @@ services:
     volumes:
       - ./data/redis:/data
     command: ["redis-server", "--appendonly", "yes"]
-
-  arena:
-    build: ./arena/Dockerfile
-    container_name: arena
-    restart: always
-    volumes:
-      - ./arena/config:/opt/arena/src/server/config
-    depends_on:
-      - redis
-    ports:
-      - "4567:4567"
-    environment:
-      REDIS_HOST: 'redis'
