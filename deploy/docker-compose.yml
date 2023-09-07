@@ -33,7 +33,7 @@ services:
     expose:
       - "3030"
     environment:
-      ADMIN_PASSWORD: "1234!@#$qwerQWER"
+      ADMIN_PASSWORD: "test1234"
 
   middleware:
     build: ./middleware
