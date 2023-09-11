@@ -64,7 +64,7 @@ services:
       - "4000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`test.activity.thieflord.dev`)"
+      - "traefik.http.routers.frontend.rule=Host(`app.test.activity.thieflord.dev`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
 
